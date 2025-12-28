@@ -9,8 +9,9 @@ app.use(express.json());
 // Routes
 app.use("/api/v1/posts", PostRouter);
 
+// ROOT DIRECTORY
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello Word!");
+  res.send("Welcome to Draftly Blog App server!");
 });
 
 export default app;
