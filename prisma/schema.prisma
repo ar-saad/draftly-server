@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -66,12 +65,17 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  role   String? @default("USER")
+  role   USER_ROLES @default(USER)
   phone  String?
-  status String? @default("ACTIVE")
+  status String?    @default("ACTIVE")
 
   @@unique([email])
   @@map("user")
+}
+
+enum USER_ROLES {
+  USER
+  ADMIN
 }
 
 model Session {
