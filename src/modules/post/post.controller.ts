@@ -1,30 +1,24 @@
 import { Request, Response } from "express";
 import { PostService } from "./post.service";
+import { UnauthorizedError } from "../../utils/AppError";
+import { sendResponse } from "../../utils/sendResponse";
+import { asyncHandler } from "../../utils/asynHandler";
 
-const createPost = async (req: Request, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(400).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
+const createPost = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new UnauthorizedError("Unauthorized");
 
-    const result = await PostService.createPost(req.body, req.user.id);
+  const result = await PostService.createPost(req.body, req.user.id);
 
-    res.status(201).json({
+  sendResponse(
+    {
+      statusCode: 201,
       success: true,
       message: "Post created successfully",
       data: result,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: "There is an error",
-      data: error,
-    });
-  }
-};
+    },
+    res
+  );
+});
 
 export const PostController = {
   createPost,
