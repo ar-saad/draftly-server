@@ -5,6 +5,9 @@ import { USER_ROLES } from "../../../generated/prisma/enums";
 
 const router: Router = Router();
 
+// GET | "/api/v1/posts" | Get all posts
+router.get("/", PostController.getPosts);
+// POST | "/api/v1/posts" | Create new post
 router.post(
   "/",
   authenticate,
