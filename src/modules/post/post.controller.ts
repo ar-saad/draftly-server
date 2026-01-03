@@ -21,60 +21,25 @@ const createPost = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
-// const getPosts = asyncHandler(async (req: Request, res: Response) => {
-//   const { search, tags, isFeatured } = req.query;
-//   // const searchString = typeof search === "string" ? search : undefined;
-//   // const tagsArr = tags ? (tags as string).split(",") : [];
-
-//   // const payload = {
-//   //   search: searchString,
-//   //   tagsArr,
-//   //   ...(isFeatured
-//   //     ? isFeatured === "true"
-//   //       ? { isFeatured: true }
-//   //       : isFeatured === "false"
-//   //       ? { isFeatured: false }
-//   //       : { isFeatured: undefined }
-//   //     : { isFeatured: undefined }),
-//   // };
-
-//   // const payload = {
-//   //   search: searchString,
-//   //   tagsArr,
-//   //   ...(isFeatured === "true"
-//   //     ? { isFeatured: true }
-//   //     : isFeatured === "false"
-//   //     ? { isFeatured: false }
-//   //     : { isFeatured: undefined }),
-//   // };
-
-//   const payload = {
-//     search: typeof search === "string" ? search : undefined,
-//     tagsArr: typeof tags === "string" ? tags.split(",") : [],
-//     ...(isFeatured === "true"
-//       ? { isFeatured: true }
-//       : isFeatured === "false"
-//       ? { isFeatured: false }
-//       : { isFeatured: undefined }),
-//   };
-
-//   const result = await PostService.getPosts(payload);
-
-//   sendResponse(
-//     {
-//       statusCode: 200,
-//       success: true,
-//       message: "Post retrieved successfully",
-//       data: result,
-//     },
-//     res
-//   );
-// });
-
 const getPosts = asyncHandler(async (req: Request, res: Response) => {
-  const { search, tags, isFeatured, status, authorId } = req.query;
+  const {
+    search,
+    tags,
+    isFeatured,
+    status,
+    authorId,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+  } = req.query;
 
   const statusString = typeof status === "string" ? status : undefined;
+
+  // Pagination
+  const pageNumber = Number(page) || 1;
+  const limitNumber = Number(limit) || 10;
+  const skipNumber = (pageNumber - 1) * limitNumber;
 
   const payload = {
     search: typeof search === "string" ? search : undefined,
@@ -91,6 +56,11 @@ const getPosts = asyncHandler(async (req: Request, res: Response) => {
         }
       : { status: undefined }),
     authorId: authorId as string | undefined,
+    page: pageNumber,
+    take: limitNumber,
+    skip: skipNumber,
+    sortBy: sortBy as string | undefined,
+    sortOrder: sortOrder as string | undefined,
   };
 
   const result = await PostService.getPosts(payload);
