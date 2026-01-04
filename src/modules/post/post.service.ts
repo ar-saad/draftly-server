@@ -1,6 +1,7 @@
 import { Post, POST_STATUS } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+import { NotFoundError } from "../../utils/AppError";
 
 const createPost = async (
   reqData: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
@@ -21,10 +22,10 @@ const getPosts = async (payload: {
   status: POST_STATUS | undefined;
   authorId: string | undefined;
   page: number;
-  take: number;
+  limit: number;
   skip: number;
-  sortBy: string | undefined;
-  sortOrder: string | undefined;
+  sortBy: string;
+  sortOrder: string;
 }) => {
   const {
     search,
@@ -33,7 +34,7 @@ const getPosts = async (payload: {
     status,
     authorId,
     page,
-    take,
+    limit,
     skip,
     sortBy,
     sortOrder,
@@ -91,22 +92,63 @@ const getPosts = async (payload: {
     query.push({ authorId });
   }
 
-  return await prisma.post.findMany({
-    take,
+  const posts = await prisma.post.findMany({
+    take: limit,
     skip,
     where: {
       AND: query,
     },
-    orderBy:
-      sortBy && sortOrder
-        ? {
-            [sortBy]: sortOrder,
-          }
-        : { createdAt: "desc" },
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
+  });
+
+  const count = await prisma.post.count({
+    where: {
+      AND: query,
+    },
+  });
+
+  return {
+    pagination: {
+      count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
+    result: posts,
+  };
+};
+
+const getPostById = async (postId: string) => {
+  return await prisma.$transaction(async (tx) => {
+    await tx.post.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
+
+    const postData = await tx.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!postData) {
+      throw new NotFoundError("Post not found");
+    }
+
+    return postData;
   });
 };
 
 export const PostService = {
   createPost,
   getPosts,
+  getPostById,
 };

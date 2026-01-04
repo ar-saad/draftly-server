@@ -12,9 +12,6 @@ export const sendResponse = (
   return res.status(resData?.statusCode).json({
     success: true,
     message: resData?.message || "Request successful",
-    data: {
-      count: resData.data.length,
-      result: resData.data,
-    },
+    data: resData.data,
   });
 };
