@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { PostService } from "./post.service";
 import { BadRequestError, UnauthorizedError } from "../../utils/AppError";
 import { sendResponse } from "../../utils/sendResponse";
-import { asyncHandler } from "../../utils/asynHandler";
+import { asyncHandler } from "../../utils/asyncHandler";
 import { POST_STATUS } from "../../../generated/prisma/enums";
 import paginationSortingHelper from "../../utils/paginationSortingHelper";
 

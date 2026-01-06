@@ -8,19 +8,18 @@ export const globalErrorHandler = (
   next: NextFunction
 ) => {
   const isDev = process.env.NODE_ENV === "development";
-  const isOperational = err instanceof AppError;
 
-  if (!isOperational) {
-    console.error("🔥 Unexpected error:", err);
+  if (isDev) {
+    console.log(err);
   }
 
-  const statusCode = isOperational ? err.statusCode : 500;
-  const message = isOperational ? err.message : "Internal server error";
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal server error";
 
   res.status(statusCode).json({
     success: false,
     message,
-    ...(err.errors && { errors: err.errors }),
+    details: err.errors || err,
     ...(isDev && { stack: err.stack }),
   });
 };

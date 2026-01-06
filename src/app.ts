@@ -1,10 +1,11 @@
 import express, { Application, Request, Response } from "express";
-import { PostRouter } from "./modules/post/post.router";
+import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
-import cors from "cors";
 import { notFound } from "./middlewares/notFound";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
+import { PostRouter } from "./modules/post/post.router";
+import { CommentRouter } from "./modules/comment/comment.router";
 
 const app: Application = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 // Routes
 app.all("/api/auth/*splat", toNodeHandler(auth)); // Auth route
 app.use("/api/v1/posts", PostRouter);
+app.use("/api/v1/comments", CommentRouter);
 
 // ROOT DIRECTORY
 app.get("/", (req: Request, res: Response) => {
