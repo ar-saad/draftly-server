@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PostController } from "./post.controller";
 import { authenticate, authorize } from "../../middlewares/auth.middleware";
-import { USER_ROLES } from "../../../generated/prisma/enums";
+import { USER_ROLES } from "../../../prisma/generated/prisma/enums";
 
 const router: Router = Router();
 
@@ -14,6 +14,13 @@ router.post(
 );
 // GET | "/api/v1/posts" | Get all posts
 router.get("/", PostController.getPosts);
+// GET | "/api/v1/posts/stats" | Get post table statistics
+router.get(
+  "/stats",
+  authenticate,
+  authorize(USER_ROLES.ADMIN),
+  PostController.getStats
+);
 // GET | "/api/v1/posts/my-posts" | Get own posts
 router.get("/my-posts", authenticate, PostController.getMyPosts);
 // GET | "/api/v1/posts/:postId" | Get post by id

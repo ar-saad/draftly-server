@@ -1,4 +1,4 @@
-import { COMMENT_STATUS } from "../../../generated/prisma/enums";
+import { COMMENT_STATUS } from "../../../prisma/generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import {
   AppError,

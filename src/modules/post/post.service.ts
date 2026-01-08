@@ -3,8 +3,8 @@ import {
   Post,
   POST_STATUS,
   USER_ROLES,
-} from "../../../generated/prisma/client";
-import { PostWhereInput } from "../../../generated/prisma/models";
+} from "../../../prisma/generated/prisma/client";
+import { PostWhereInput } from "../../../prisma/generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { ForbiddenError, NotFoundError } from "../../utils/AppError";
 import { omitUndefined } from "../../utils/object";
@@ -334,6 +334,51 @@ const deletePost = async (
   });
 };
 
+// GET | "/api/v1/posts/stats" | Get post table statistics
+const getStats = async () => {
+  return await prisma.$transaction(async (tx) => {
+    const [
+      totalPosts,
+      publishedPosts,
+      draftPosts,
+      archivedPosts,
+      totalComments,
+      approvedComments,
+      rejectedComments,
+      totalUsers,
+      totalAdminCount,
+      totalUserCount,
+      totalViews,
+    ] = await Promise.all([
+      await tx.post.count(),
+      await tx.post.count({ where: { status: POST_STATUS.PUBLISHED } }),
+      await tx.post.count({ where: { status: POST_STATUS.DRAFT } }),
+      await tx.post.count({ where: { status: POST_STATUS.ARCHIVED } }),
+      await tx.comment.count(),
+      await tx.comment.count({ where: { status: COMMENT_STATUS.APPROVED } }),
+      await tx.comment.count({ where: { status: COMMENT_STATUS.REJECTED } }),
+      await tx.user.count(),
+      await tx.user.count({ where: { role: USER_ROLES.ADMIN } }),
+      await tx.user.count({ where: { role: USER_ROLES.USER } }),
+      await tx.post.aggregate({ _sum: { views: true } }),
+    ]);
+
+    return {
+      totalPosts,
+      publishedPosts,
+      draftPosts,
+      archivedPosts,
+      totalComments,
+      approvedComments,
+      rejectedComments,
+      totalUsers,
+      totalAdminCount,
+      totalUserCount,
+      totalViews: totalViews._sum.views,
+    };
+  });
+};
+
 export const PostService = {
   createPost,
   getPosts,
@@ -341,4 +386,5 @@ export const PostService = {
   getMyPosts,
   updatePost,
   deletePost,
+  getStats,
 };

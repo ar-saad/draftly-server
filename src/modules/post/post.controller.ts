@@ -3,7 +3,10 @@ import { PostService } from "./post.service";
 import { BadRequestError, UnauthorizedError } from "../../utils/AppError";
 import { sendResponse } from "../../utils/sendResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { POST_STATUS, USER_ROLES } from "../../../generated/prisma/enums";
+import {
+  POST_STATUS,
+  USER_ROLES,
+} from "../../../prisma/generated/prisma/enums";
 import paginationSortingHelper from "../../utils/paginationSortingHelper";
 
 // POST | "/api/v1/posts" | Create new post
@@ -171,6 +174,21 @@ const deletePost = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+// GET | "/api/v1/posts/stats" | Get post table statistics
+const getStats = asyncHandler(async (req: Request, res: Response) => {
+  const result = await PostService.getStats();
+
+  sendResponse(
+    {
+      statusCode: 200,
+      success: true,
+      message: "Post statistics retrieved successfully",
+      data: result,
+    },
+    res
+  );
+});
+
 export const PostController = {
   createPost,
   getPosts,
@@ -178,4 +196,5 @@ export const PostController = {
   getMyPosts,
   updatePost,
   deletePost,
+  getStats,
 };

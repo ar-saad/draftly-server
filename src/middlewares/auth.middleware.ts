@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { auth } from "../lib/auth";
-import { USER_ROLES } from "../../generated/prisma/enums";
+import { USER_ROLES } from "../../prisma/generated/prisma/enums";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ForbiddenError, UnauthorizedError } from "../utils/AppError";
 
