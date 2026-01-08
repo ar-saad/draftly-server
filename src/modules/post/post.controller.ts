@@ -3,9 +3,10 @@ import { PostService } from "./post.service";
 import { BadRequestError, UnauthorizedError } from "../../utils/AppError";
 import { sendResponse } from "../../utils/sendResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { POST_STATUS } from "../../../generated/prisma/enums";
+import { POST_STATUS, USER_ROLES } from "../../../generated/prisma/enums";
 import paginationSortingHelper from "../../utils/paginationSortingHelper";
 
+// POST | "/api/v1/posts" | Create new post
 const createPost = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("Unauthorized");
 
@@ -22,6 +23,7 @@ const createPost = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+// GET | "/api/v1/posts" | Get all posts
 const getPosts = asyncHandler(async (req: Request, res: Response) => {
   const { search, tags, isFeatured, status, authorId } = req.query;
 
@@ -66,6 +68,7 @@ const getPosts = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+// GET | "/api/v1/posts/:postId" | Get post by id
 const getPostById = asyncHandler(async (req: Request, res: Response) => {
   const { postId } = req.params;
 
@@ -86,8 +89,93 @@ const getPostById = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+// GET | "/api/v1/posts/my-posts" | Get own posts
+const getMyPosts = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user;
+
+  if (!user) {
+    throw new BadRequestError("You are not authorized to perform this action");
+  }
+
+  const result = await PostService.getMyPosts(user?.id);
+
+  sendResponse(
+    {
+      statusCode: 200,
+      success: true,
+      message: "Posts retrieved successfully",
+      data: result,
+    },
+    res
+  );
+});
+
+// PATCH | "/api/v1/posts/:postId" | Update post by ID
+const updatePost = asyncHandler(async (req: Request, res: Response) => {
+  const { postId } = req.params;
+  const user = req.user;
+
+  if (!postId) {
+    throw new BadRequestError("Post ID not provided");
+  }
+
+  if (!user) {
+    throw new BadRequestError("You are not authorized to perform this action");
+  }
+
+  const result = await PostService.updatePost(
+    postId,
+    user?.id,
+    user?.role as USER_ROLES,
+    req.body
+  );
+
+  sendResponse(
+    {
+      statusCode: 200,
+      success: true,
+      message: "Posts updated successfully",
+      data: result,
+    },
+    res
+  );
+});
+
+// DELETE | "/api/v1/posts/:postId" | Delete post by ID
+const deletePost = asyncHandler(async (req: Request, res: Response) => {
+  const { postId } = req.params;
+  const user = req.user;
+
+  if (!postId) {
+    throw new BadRequestError("Post ID not provided");
+  }
+
+  if (!user) {
+    throw new BadRequestError("You are not authorized to perform this action");
+  }
+
+  const result = await PostService.deletePost(
+    postId,
+    user?.id,
+    user?.role as USER_ROLES
+  );
+
+  sendResponse(
+    {
+      statusCode: 200,
+      success: true,
+      message: "Posts deleted successfully",
+      data: result,
+    },
+    res
+  );
+});
+
 export const PostController = {
   createPost,
   getPosts,
   getPostById,
+  getMyPosts,
+  updatePost,
+  deletePost,
 };

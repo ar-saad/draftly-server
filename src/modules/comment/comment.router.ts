@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { CommentController } from "./comment.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+import { authenticate, authorize } from "../../middlewares/auth.middleware";
+import { USER_ROLES } from "../../../generated/prisma/enums";
 
 const router = Router();
 
@@ -14,5 +15,12 @@ router.post("/", authenticate, CommentController.createComment);
 router.patch("/:commentId", authenticate, CommentController.updateComment);
 // DELETE | "/api/v1/comments/:commentId" | Delete comment by Id
 router.delete("/:commentId", authenticate, CommentController.deleteComment);
+// PATCH | "/api/v1/comments/moderate/:commentId" | Admin update comment status
+router.patch(
+  "/moderate/:commentId",
+  authenticate,
+  authorize(USER_ROLES.ADMIN),
+  CommentController.moderateComment
+);
 
 export const CommentRouter: Router = router;

@@ -178,10 +178,41 @@ const deleteComment = async (commentId: string, authorId: string) => {
   return result;
 };
 
+// PATCH | "/api/v1/comments/moderate/:commentId" | Admin update comment status
+const moderateComment = async (commentId: string, status: COMMENT_STATUS) => {
+  const commentData = await prisma.comment.findUnique({
+    where: {
+      id: commentId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (!commentData) {
+    throw new NotFoundError("Comment not found");
+  }
+
+  if (commentData.status === status) {
+    throw new BadRequestError(`The status is already ${status}`);
+  }
+
+  return await prisma.comment.update({
+    where: {
+      id: commentId,
+    },
+    data: {
+      status,
+    },
+  });
+};
+
 export const CommentService = {
   createComment,
   getCommentById,
   getCommentByAuthorId,
   deleteComment,
   updateComment,
+  moderateComment,
 };

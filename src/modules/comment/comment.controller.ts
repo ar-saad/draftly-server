@@ -123,10 +123,33 @@ const deleteComment = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+// PATCH | "/api/v1/comments/moderate/:commentId" | Admin update comment status
+const moderateComment = asyncHandler(async (req: Request, res: Response) => {
+  const { commentId } = req.params;
+  const { status } = req.body;
+
+  if (!commentId || typeof commentId !== "string") {
+    throw new BadRequestError("Comment ID not provided or invalid comment ID");
+  }
+
+  const result = await CommentService.moderateComment(commentId, status);
+
+  sendResponse(
+    {
+      statusCode: 200,
+      success: true,
+      message: "Comment status updated successfully",
+      data: result,
+    },
+    res
+  );
+});
+
 export const CommentController = {
   createComment,
   getCommentById,
   getCommentByAuthorId,
   deleteComment,
   updateComment,
+  moderateComment,
 };

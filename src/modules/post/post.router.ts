@@ -5,10 +5,6 @@ import { USER_ROLES } from "../../../generated/prisma/enums";
 
 const router: Router = Router();
 
-// GET | "/api/v1/posts" | Get all posts
-router.get("/", PostController.getPosts);
-// GET | "/api/v1/post/:userId" | Get post by id
-router.get("/:postId", PostController.getPostById);
 // POST | "/api/v1/posts" | Create new post
 router.post(
   "/",
@@ -16,5 +12,15 @@ router.post(
   authorize(USER_ROLES.USER),
   PostController.createPost
 );
+// GET | "/api/v1/posts" | Get all posts
+router.get("/", PostController.getPosts);
+// GET | "/api/v1/posts/my-posts" | Get own posts
+router.get("/my-posts", authenticate, PostController.getMyPosts);
+// GET | "/api/v1/posts/:postId" | Get post by id
+router.get("/:postId", PostController.getPostById);
+// PATCH | "/api/v1/posts/:postId" | Update post by ID
+router.patch("/:postId", authenticate, PostController.updatePost);
+// DELETE | "/api/v1/posts/:postId" | Delete post by ID
+router.delete("/:postId", authenticate, PostController.deletePost);
 
 export const PostRouter = router;
