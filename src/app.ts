@@ -6,6 +6,7 @@ import { notFound } from "./middlewares/notFound";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import { PostRouter } from "./modules/post/post.router";
 import { CommentRouter } from "./modules/comment/comment.router";
+import { requestLogger } from "./middlewares/requestLogger";
 
 const app: Application = express();
 
@@ -14,11 +15,13 @@ app.use(
   cors({
     origin: process.env.APP_URL || "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 
 // Parser
 app.use(express.json());
+// Logger
+app.use(requestLogger);
 
 // Routes
 app.all("/api/auth/*splat", toNodeHandler(auth)); // Auth route
