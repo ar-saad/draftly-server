@@ -6,12 +6,7 @@ import { USER_ROLES } from "../../../prisma/generated/prisma/enums";
 const router: Router = Router();
 
 // POST | "/api/v1/posts" | Create new post
-router.post(
-  "/",
-  authenticate,
-  authorize(USER_ROLES.USER),
-  PostController.createPost
-);
+router.post("/", authenticate, PostController.createPost);
 // GET | "/api/v1/posts" | Get all posts
 router.get("/", PostController.getPosts);
 // GET | "/api/v1/posts/stats" | Get post table statistics
