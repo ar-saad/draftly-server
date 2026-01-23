@@ -1,20 +1,20 @@
 import {
   COMMENT_STATUS,
-  Post,
-  POST_STATUS,
+  Blog,
+  BLOG_STATUS,
   USER_ROLES,
 } from "../../../prisma/generated/prisma/client";
-import { PostWhereInput } from "../../../prisma/generated/prisma/models";
+import { BlogWhereInput } from "../../../prisma/generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { ForbiddenError, NotFoundError } from "../../utils/AppError";
 import { omitUndefined } from "../../utils/object";
 
-// POST | "/api/v1/posts" | Create new post
-const createPost = async (
-  reqData: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
-  userId: string
+// POST | "/api/v1/blogs" | Create new blog
+const createBlog = async (
+  reqData: Omit<Blog, "id" | "createdAt" | "updatedAt" | "authorId">,
+  userId: string,
 ) => {
-  return await prisma.post.create({
+  return await prisma.blog.create({
     data: {
       ...reqData,
       authorId: userId,
@@ -22,12 +22,12 @@ const createPost = async (
   });
 };
 
-// GET | "/api/v1/posts" | Get all posts
-const getPosts = async (payload: {
+// GET | "/api/v1/blogs" | Get all blogs
+const getBlogs = async (payload: {
   search: string | undefined;
   tagsArr: string[];
   isFeatured: boolean | undefined;
-  status: POST_STATUS | undefined;
+  status: BLOG_STATUS | undefined;
   authorId: string | undefined;
   page: number;
   limit: number;
@@ -49,7 +49,7 @@ const getPosts = async (payload: {
   } = payload;
 
   // AND query initialization
-  const query: PostWhereInput[] = [];
+  const query: BlogWhereInput[] = [];
 
   // Check if search value exists
   if (search) {
@@ -100,7 +100,7 @@ const getPosts = async (payload: {
     query.push({ authorId });
   }
 
-  const posts = await prisma.post.findMany({
+  const blogs = await prisma.blog.findMany({
     take: limit,
     skip,
     where: {
@@ -116,7 +116,7 @@ const getPosts = async (payload: {
     },
   });
 
-  const count = await prisma.post.count({
+  const count = await prisma.blog.count({
     where: {
       AND: query,
     },
@@ -129,16 +129,16 @@ const getPosts = async (payload: {
       limit,
       totalPages: Math.ceil(count / limit),
     },
-    result: posts,
+    result: blogs,
   };
 };
 
-// GET | "/api/v1/posts/:postId" | Get post by id
-const getPostById = async (postId: string) => {
+// GET | "/api/v1/blogs/:blogId" | Get blog by id
+const getBlogById = async (blogId: string) => {
   return await prisma.$transaction(async (tx) => {
-    await tx.post.update({
+    await tx.blog.update({
       where: {
-        id: postId,
+        id: blogId,
       },
       data: {
         views: {
@@ -147,9 +147,9 @@ const getPostById = async (postId: string) => {
       },
     });
 
-    const postData = await tx.post.findUnique({
+    const blogData = await tx.blog.findUnique({
       where: {
-        id: postId,
+        id: blogId,
       },
       include: {
         comments: {
@@ -187,16 +187,16 @@ const getPostById = async (postId: string) => {
       },
     });
 
-    if (!postData) {
-      throw new NotFoundError("Post not found");
+    if (!blogData) {
+      throw new NotFoundError("Blog not found");
     }
 
-    return postData;
+    return blogData;
   });
 };
 
-// GET | "/api/v1/posts/my-posts" | Get own posts
-const getMyPosts = async (authorId: string) => {
+// GET | "/api/v1/blogs/my-blogs" | Get own blogs
+const getMyBlogs = async (authorId: string) => {
   const user = await prisma.user.findUnique({
     where: {
       id: authorId,
@@ -211,7 +211,7 @@ const getMyPosts = async (authorId: string) => {
     throw new ForbiddenError("Your account is not active or it is restricted");
   }
 
-  const result = await prisma.post.findMany({
+  const result = await prisma.blog.findMany({
     where: {
       authorId,
     },
@@ -227,7 +227,7 @@ const getMyPosts = async (authorId: string) => {
     },
   });
 
-  // const total = await prisma.post.aggregate({
+  // const total = await prisma.blog.aggregate({
   //   _count: {
   //     id: true,
   //   },
@@ -236,7 +236,7 @@ const getMyPosts = async (authorId: string) => {
   //   },
   // });
 
-  const total = await prisma.post.count({
+  const total = await prisma.blog.count({
     where: {
       authorId,
     },
@@ -248,23 +248,23 @@ const getMyPosts = async (authorId: string) => {
   };
 };
 
-// PATCH | "/api/v1/posts/:postId" | Update post by ID
-const updatePost = async (
-  postId: string,
+// PATCH | "/api/v1/blogs/:blogId" | Update blog by ID
+const updateBlog = async (
+  blogId: string,
   authorId: string,
   userRole: USER_ROLES,
   data: {
     title?: string;
     content?: string;
     thumbnail?: string;
-    status?: POST_STATUS;
+    status?: BLOG_STATUS;
     tags?: string[];
     isFeatured?: boolean;
-  }
+  },
 ) => {
-  const postToUpdate = await prisma.post.findUnique({
+  const blogToUpdate = await prisma.blog.findUnique({
     where: {
-      id: postId,
+      id: blogId,
     },
     select: {
       id: true,
@@ -272,15 +272,15 @@ const updatePost = async (
     },
   });
 
-  // Check if the post exist
-  if (!postToUpdate) {
-    throw new NotFoundError("Post not found");
+  // Check if the blog exist
+  if (!blogToUpdate) {
+    throw new NotFoundError("Blog not found");
   }
 
   // Check if the user type is ADMIN,
-  // check if the user is trying to update their own post if he is not ADMIN
-  if (userRole !== USER_ROLES.ADMIN && postToUpdate.authorId !== authorId) {
-    throw new ForbiddenError("You do not have permission to update this post");
+  // check if the user is trying to update their own blog if he is not ADMIN
+  if (userRole !== USER_ROLES.ADMIN && blogToUpdate.authorId !== authorId) {
+    throw new ForbiddenError("You do not have permission to update this blog");
   }
 
   const payload = omitUndefined({
@@ -292,23 +292,23 @@ const updatePost = async (
     ...(userRole === USER_ROLES.ADMIN ? { isFeatured: data.isFeatured } : {}),
   });
 
-  return await prisma.post.update({
+  return await prisma.blog.update({
     where: {
-      id: postId,
+      id: blogId,
     },
     data: payload,
   });
 };
 
-// DELETE | "/api/v1/posts/:postId" | Delete post by ID
-const deletePost = async (
-  postId: string,
+// DELETE | "/api/v1/blogs/:blogId" | Delete blog by ID
+const deleteBlog = async (
+  blogId: string,
   userId: string,
-  userRole: USER_ROLES
+  userRole: USER_ROLES,
 ) => {
-  const postToDelete = await prisma.post.findUnique({
+  const blogToDelete = await prisma.blog.findUnique({
     where: {
-      id: postId,
+      id: blogId,
     },
     select: {
       id: true,
@@ -316,32 +316,32 @@ const deletePost = async (
     },
   });
 
-  // Check if the post exist
-  if (!postToDelete) {
-    throw new NotFoundError("Post not found");
+  // Check if the blog exist
+  if (!blogToDelete) {
+    throw new NotFoundError("Blog not found");
   }
 
   // Check if the user type is ADMIN,
-  // If he is not ADMIN, check if the user is trying to delete their own post or not
-  if (userRole !== USER_ROLES.ADMIN && postToDelete.authorId !== userId) {
-    throw new ForbiddenError("You do not have permission to delete this post");
+  // If he is not ADMIN, check if the user is trying to delete their own blog or not
+  if (userRole !== USER_ROLES.ADMIN && blogToDelete.authorId !== userId) {
+    throw new ForbiddenError("You do not have permission to delete this blog");
   }
 
-  return await prisma.post.delete({
+  return await prisma.blog.delete({
     where: {
-      id: postId,
+      id: blogId,
     },
   });
 };
 
-// GET | "/api/v1/posts/stats" | Get post table statistics
+// GET | "/api/v1/blogs/stats" | Get blog table statistics
 const getStats = async () => {
   return await prisma.$transaction(async (tx) => {
     const [
-      totalPosts,
-      publishedPosts,
-      draftPosts,
-      archivedPosts,
+      totalBlogs,
+      publishedBlogs,
+      draftBlogs,
+      archivedBlogs,
       totalComments,
       approvedComments,
       rejectedComments,
@@ -350,24 +350,24 @@ const getStats = async () => {
       totalUserCount,
       totalViews,
     ] = await Promise.all([
-      await tx.post.count(),
-      await tx.post.count({ where: { status: POST_STATUS.PUBLISHED } }),
-      await tx.post.count({ where: { status: POST_STATUS.DRAFT } }),
-      await tx.post.count({ where: { status: POST_STATUS.ARCHIVED } }),
+      await tx.blog.count(),
+      await tx.blog.count({ where: { status: BLOG_STATUS.PUBLISHED } }),
+      await tx.blog.count({ where: { status: BLOG_STATUS.DRAFT } }),
+      await tx.blog.count({ where: { status: BLOG_STATUS.ARCHIVED } }),
       await tx.comment.count(),
       await tx.comment.count({ where: { status: COMMENT_STATUS.APPROVED } }),
       await tx.comment.count({ where: { status: COMMENT_STATUS.REJECTED } }),
       await tx.user.count(),
       await tx.user.count({ where: { role: USER_ROLES.ADMIN } }),
       await tx.user.count({ where: { role: USER_ROLES.USER } }),
-      await tx.post.aggregate({ _sum: { views: true } }),
+      await tx.blog.aggregate({ _sum: { views: true } }),
     ]);
 
     return {
-      totalPosts,
-      publishedPosts,
-      draftPosts,
-      archivedPosts,
+      totalBlogs,
+      publishedBlogs,
+      draftBlogs,
+      archivedBlogs,
       totalComments,
       approvedComments,
       rejectedComments,
@@ -379,12 +379,12 @@ const getStats = async () => {
   });
 };
 
-export const PostService = {
-  createPost,
-  getPosts,
-  getPostById,
-  getMyPosts,
-  updatePost,
-  deletePost,
+export const BlogService = {
+  createBlog,
+  getBlogs,
+  getBlogById,
+  getMyBlogs,
+  updateBlog,
+  deleteBlog,
   getStats,
 };

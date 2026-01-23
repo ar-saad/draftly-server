@@ -1,10 +1,10 @@
-model Post {
+model Blog {
   id         String      @id @default(uuid())
   title      String      @db.VarChar(225)
   content    String      @db.Text
   thumbnail  String?
   isFeatured Boolean     @default(false)
-  status     POST_STATUS @default(PUBLISHED)
+  status     BLOG_STATUS @default(PUBLISHED)
   tags       String[]
   views      Int         @default(0)
   authorId   String
@@ -13,10 +13,10 @@ model Post {
   comments   Comment[]
 
   @@index([authorId])
-  @@map("posts")
+  @@map("blogs")
 }
 
-enum POST_STATUS {
+enum BLOG_STATUS {
   DRAFT
   PUBLISHED
   ARCHIVED

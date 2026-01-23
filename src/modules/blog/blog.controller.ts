@@ -1,39 +1,39 @@
 import { Request, Response } from "express";
-import { PostService } from "./post.service";
+import { BlogService } from "./blog.service";
 import { BadRequestError, UnauthorizedError } from "../../utils/AppError";
 import { sendResponse } from "../../utils/sendResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
 import {
-  POST_STATUS,
+  BLOG_STATUS,
   USER_ROLES,
 } from "../../../prisma/generated/prisma/enums";
 import paginationSortingHelper from "../../utils/paginationSortingHelper";
 
-// POST | "/api/v1/posts" | Create new post
-const createPost = asyncHandler(async (req: Request, res: Response) => {
+// POST | "/api/v1/blogs" | Create new blog
+const createBlog = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("Unauthorized");
 
-  const result = await PostService.createPost(req.body, req.user.id);
+  const result = await BlogService.createBlog(req.body, req.user.id);
 
   sendResponse(
     {
       statusCode: 201,
       success: true,
-      message: "Post created successfully",
+      message: "Blog created successfully",
       data: result,
     },
-    res
+    res,
   );
 });
 
-// GET | "/api/v1/posts" | Get all posts
-const getPosts = asyncHandler(async (req: Request, res: Response) => {
+// GET | "/api/v1/blogs" | Get all blogs
+const getBlogs = asyncHandler(async (req: Request, res: Response) => {
   const { search, tags, isFeatured, status, authorId } = req.query;
 
   const statusString = typeof status === "string" ? status : undefined;
 
   const { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(
-    req.query
+    req.query,
   );
 
   const payload = {
@@ -42,12 +42,12 @@ const getPosts = asyncHandler(async (req: Request, res: Response) => {
     ...(isFeatured === "true"
       ? { isFeatured: true }
       : isFeatured === "false"
-      ? { isFeatured: false }
-      : { isFeatured: undefined }),
+        ? { isFeatured: false }
+        : { isFeatured: undefined }),
     ...(statusString &&
-    Object.values(POST_STATUS).includes(status as POST_STATUS)
+    Object.values(BLOG_STATUS).includes(status as BLOG_STATUS)
       ? {
-          status: statusString as POST_STATUS,
+          status: statusString as BLOG_STATUS,
         }
       : { status: undefined }),
     authorId: authorId as string | undefined,
@@ -58,143 +58,143 @@ const getPosts = asyncHandler(async (req: Request, res: Response) => {
     sortOrder: sortOrder,
   };
 
-  const result = await PostService.getPosts(payload);
+  const result = await BlogService.getBlogs(payload);
 
   sendResponse(
     {
       statusCode: 200,
       success: true,
-      message: "Post retrieved successfully",
+      message: "Blog retrieved successfully",
       data: result,
     },
-    res
+    res,
   );
 });
 
-// GET | "/api/v1/posts/:postId" | Get post by id
-const getPostById = asyncHandler(async (req: Request, res: Response) => {
-  const { postId } = req.params;
+// GET | "/api/v1/blogs/:blogId" | Get blog by id
+const getBlogById = asyncHandler(async (req: Request, res: Response) => {
+  const { blogId } = req.params;
 
-  if (!postId) {
-    throw new BadRequestError("Post ID not provided");
+  if (!blogId) {
+    throw new BadRequestError("Blog ID not provided");
   }
 
-  const result = await PostService.getPostById(postId);
+  const result = await BlogService.getBlogById(blogId);
 
   sendResponse(
     {
       statusCode: 200,
       success: true,
-      message: "Post retrieved successfully",
+      message: "Blog retrieved successfully",
       data: result,
     },
-    res
+    res,
   );
 });
 
-// GET | "/api/v1/posts/my-posts" | Get own posts
-const getMyPosts = asyncHandler(async (req: Request, res: Response) => {
+// GET | "/api/v1/blogs/my-blogs" | Get own blogs
+const getMyBlogs = asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
 
   if (!user) {
     throw new BadRequestError("You are not authorized to perform this action");
   }
 
-  const result = await PostService.getMyPosts(user?.id);
+  const result = await BlogService.getMyBlogs(user?.id);
 
   sendResponse(
     {
       statusCode: 200,
       success: true,
-      message: "Posts retrieved successfully",
+      message: "Blogs retrieved successfully",
       data: result,
     },
-    res
+    res,
   );
 });
 
-// PATCH | "/api/v1/posts/:postId" | Update post by ID
-const updatePost = asyncHandler(async (req: Request, res: Response) => {
-  const { postId } = req.params;
+// PATCH | "/api/v1/blogs/:blogId" | Update blog by ID
+const updateBlog = asyncHandler(async (req: Request, res: Response) => {
+  const { blogId } = req.params;
   const user = req.user;
 
-  if (!postId) {
-    throw new BadRequestError("Post ID not provided");
+  if (!blogId) {
+    throw new BadRequestError("Blog ID not provided");
   }
 
   if (!user) {
     throw new BadRequestError("You are not authorized to perform this action");
   }
 
-  const result = await PostService.updatePost(
-    postId,
+  const result = await BlogService.updateBlog(
+    blogId,
     user?.id,
     user?.role as USER_ROLES,
-    req.body
+    req.body,
   );
 
   sendResponse(
     {
       statusCode: 200,
       success: true,
-      message: "Posts updated successfully",
+      message: "Blogs updated successfully",
       data: result,
     },
-    res
+    res,
   );
 });
 
-// DELETE | "/api/v1/posts/:postId" | Delete post by ID
-const deletePost = asyncHandler(async (req: Request, res: Response) => {
-  const { postId } = req.params;
+// DELETE | "/api/v1/blogs/:blogId" | Delete blog by ID
+const deleteBlog = asyncHandler(async (req: Request, res: Response) => {
+  const { blogId } = req.params;
   const user = req.user;
 
-  if (!postId) {
-    throw new BadRequestError("Post ID not provided");
+  if (!blogId) {
+    throw new BadRequestError("Blog ID not provided");
   }
 
   if (!user) {
     throw new BadRequestError("You are not authorized to perform this action");
   }
 
-  const result = await PostService.deletePost(
-    postId,
+  const result = await BlogService.deleteBlog(
+    blogId,
     user?.id,
-    user?.role as USER_ROLES
+    user?.role as USER_ROLES,
   );
 
   sendResponse(
     {
       statusCode: 200,
       success: true,
-      message: "Posts deleted successfully",
+      message: "Blogs deleted successfully",
       data: result,
     },
-    res
+    res,
   );
 });
 
-// GET | "/api/v1/posts/stats" | Get post table statistics
+// GET | "/api/v1/blogs/stats" | Get blog table statistics
 const getStats = asyncHandler(async (req: Request, res: Response) => {
-  const result = await PostService.getStats();
+  const result = await BlogService.getStats();
 
   sendResponse(
     {
       statusCode: 200,
       success: true,
-      message: "Post statistics retrieved successfully",
+      message: "Blog statistics retrieved successfully",
       data: result,
     },
-    res
+    res,
   );
 });
 
-export const PostController = {
-  createPost,
-  getPosts,
-  getPostById,
-  getMyPosts,
-  updatePost,
-  deletePost,
+export const BlogController = {
+  createBlog,
+  getBlogs,
+  getBlogById,
+  getMyBlogs,
+  updateBlog,
+  deleteBlog,
   getStats,
 };
